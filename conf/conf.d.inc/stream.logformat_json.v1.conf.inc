@@ -1,0 +1,47 @@
+# log_format basic '$remote_addr [$time_local] '
+#                  '$protocol $status $bytes_sent $bytes_received '
+#                  '$session_time'
+# 		 ' $ssl_preread_alpn_protocols'
+# 		 ' $ssl_preread_server_name'
+# 		 ' $ssl_preread_protocol';
+
+map "$time_iso8601:$msec" $time_iso8601_with_ms {
+   ~(.*)\+(\d+:\d+):\d+\.(\d+)$ $1.$3+$2;
+}
+
+log_format stream_json_v1_0 escape=json
+'{'
+  '"time_local":"$time_local",'
+  '"time_iso8601":"$time_iso8601",'
+  '"time_msec":$msec,'
+  '"time_iso8601_ms":"$time_iso8601_with_ms",'
+  '"server_addr":"$server_addr",'
+  '"server_port":"$server_port",'
+  '"protocol":"$protocol",'
+  '"hostname":"$hostname",'
+  '"nginx_logs":{'
+    '"type":"nginx",'
+    '"log_format":"stream_json_v1_0",'
+    '"escape":"json",'
+    '"version":"1.0"'
+  '},'
+  '"remote":{'
+    '"binary_remote_addr":"$binary_remote_addr",'
+    '"remote_addr":"$remote_addr",'
+    '"remote_port":"$remote_port"'
+  '},'
+  '"request":{'
+    '"connection":"$connection",'
+    '"bytes_received":"$bytes_received",'
+    '"session_time":"$session_time"'
+  '},'
+  '"response":{'
+    '"status":$status,'
+    '"bytes_sent":$bytes_sent'
+  '},'
+  '"ssl":{'
+    '"ssl_preread_alpn_protocols":"$ssl_preread_alpn_protocols",'
+    '"ssl_preread_server_name":"$ssl_preread_server_name",'
+    '"ssl_preread_protocol":"$ssl_preread_protocol"'
+  '}'
+'}';
