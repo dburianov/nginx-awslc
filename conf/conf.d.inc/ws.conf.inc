@@ -1,5 +1,3 @@
-proxy_redirect     default;
-#proxy_redirect off;
 proxy_http_version 1.1;
 
 #Requests sent within early data are subject to replay attacks.
