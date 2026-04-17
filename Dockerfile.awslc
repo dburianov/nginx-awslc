@@ -1,8 +1,9 @@
 FROM ubuntu:latest AS nginx_awslc_build
 LABEL maintainer="Dmytro Burianov <dmytro@burianov.net>"
 ARG TARGETARCH
-ARG GOLANG_VERSION=1.25.5
-ARG NGINX_VERSION=release-1.29.4
+ARG GOLANG_VERSION=1.26.2
+ARG NGINX_VERSION=release-1.29.8
+ARG AWS_LC_VERSION=v1.71.0
 ARG MODSECURITY_VERSION=v3/master
 ARG GRPC_VERSION=v1.49.2
 ARG OTEL_CPP_VERSION=v1.8.1
@@ -11,6 +12,7 @@ ARG OTEL_CONTRIB_VERSION=37e4466d882cbddff6f607a20fe327060de76166
 ENV DEBIAN_FRONTEND=noninteractive \
     GOLANG_VERSION=$GOLANG_VERSION \
     NGINX_VERSION=$NGINX_VERSION \
+    AWS_LC_VERSION=$AWS_LC_VERSION \
     MODSECURITY_VERSION=$MODSECURITY_VERSION \
     GRPC_VERSION=$GRPC_VERSION \
     OTEL_CPP_VERSION=$OTEL_CPP_VERSION \
@@ -67,7 +69,7 @@ RUN <<EOT
     git clone --recursive https://github.com/maxmind/libmaxminddb /usr/src/libmaxminddb
     git clone -b ${NGINX_VERSION} https://github.com/nginx/nginx.git /usr/src/nginx
     git clone https://github.com/nginx/njs.git /usr/src/njs
-    git clone https://github.com/aws/aws-lc.git /usr/src/aws-lc
+    git clone -b ${AWS_LC_VERSION} https://github.com/aws/aws-lc.git /usr/src/aws-lc
 EOT
 
 COPY ngx_http_ssl_fingerprint /usr/src/ngx_http_ssl_fingerprint
@@ -217,6 +219,7 @@ RUN <<EOT
     cp -rf /usr/src/lua-resty-core/lib/* /usr/local/share/lua/5.1/
     cp -rf /usr/src/lua-resty-lrucache/lib/* /usr/local/share/lua/5.1/
 EOT
+# --add-module=/usr/src/ngx_http_proxy_connect_module \
 
 RUN /usr/local/nginx/sbin/nginx -V
 
