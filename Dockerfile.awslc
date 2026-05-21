@@ -1,9 +1,9 @@
-FROM ubuntu:latest AS nginx_awslc_build
+FROM ubuntu:24.04 AS nginx_awslc_build
 LABEL maintainer="Dmytro Burianov <dmytro@burianov.net>"
 ARG TARGETARCH
-ARG GOLANG_VERSION=1.26.2
-ARG NGINX_VERSION=release-1.29.8
-ARG AWS_LC_VERSION=v1.71.0
+ARG GOLANG_VERSION=1.26.3
+ARG NGINX_VERSION=release-1.31.0
+ARG AWS_LC_VERSION=v1.73.0
 ARG MODSECURITY_VERSION=v3/master
 ARG GRPC_VERSION=v1.49.2
 ARG OTEL_CPP_VERSION=v1.8.1
@@ -85,6 +85,7 @@ EOT
 RUN <<EOT
     cd /usr/src/ModSecurity
     git submodule init && git submodule update
+    git submodule update --init --recursive
     ./build.sh && ./configure
     make -j $(nproc) && make install
 EOT
@@ -244,12 +245,8 @@ FROM dburianov/modsecurity_rules:latest AS modsecurity_rules
 FROM dburianov/geoip:latest AS geoip
 FROM dburianov/curl:latest AS curl
 FROM dburianov/openssl:latest AS openssl
-# FROM nginx_${SSL}_post AS nginx-build
-# FROM nginx_build_nginx-otel AS nginx-otel
-# FROM nginx_build_otel-nginx AS otel-nginx
-# FROM ubuntu_core AS nginx-release
 FROM nginx_awslc_build AS nginx-build
-FROM ubuntu:latest AS nginx-release
+FROM ubuntu:24.04 AS nginx-release
 
 LABEL maintainer="Dmytro Burianov <dmytro@burianov.net>"
 ARG CACHEBUST=0
@@ -273,9 +270,6 @@ COPY --from=nginx-build /usr/local /usr/local/
 COPY --from=modsecurity_rules /usr/local/modsecurity /usr/local/modsecurity
 COPY --from=nginx-build /usr/src/ModSecurity/unicode.mapping /usr/local/modsecurity/unicode.mapping
 COPY --from=nginx-build /usr/bin/envsubst /usr/bin/envsubst
-# COPY --from=otel-nginx /usr/src/opentelemetry-cpp-contrib/instrumentation/nginx/test/conf/otel-nginx.toml /usr/local/nginx/conf.docker/conf.d.inc/otel-nginx.toml
-# COPY --from=otel-nginx /usr/local/nginx/modules/otel_ngx_module.so /usr/local/nginx/modules/otel_ngx_module.so
-# COPY --from=nginx-otel /usr/local/nginx/modules/ngx_otel_module.so /usr/local/nginx/modules/ngx_otel_module.so
 
 COPY --from=geoip /geoip /usr/local/nginx/geoip
 COPY --from=curl /usr/local/curl/ /usr/local/curl/
