@@ -32,11 +32,15 @@ RUN <<EOT
         gcc g++ libssl-dev libgd-dev libperl-dev gperf uthash-dev \
         flex bison curl libcurl4-openssl-dev pkg-config libc-ares-dev \
         libre2-dev lua-socket lua-zlib ninja-build 
-    wget https://go.dev/dl/go$GOLANG_VERSION.linux-$TARGETARCH.tar.gz
-    tar -C /usr/local -xzf go$GOLANG_VERSION.linux-$TARGETARCH.tar.gz
     rm -rf go$GOLANG_VERSION.linux-$TARGETARCH.tar.gz /var/lib/apt/lists/* \
            /usr/share/doc/* /usr/share/man/*
     apt-get autoremove -yqq && apt-get clean -y
+EOT
+
+RUN <<EOT
+    wget https://go.dev/dl/go$GOLANG_VERSION.linux-$TARGETARCH.tar.gz
+    tar -C /usr/local -xzf go$GOLANG_VERSION.linux-$TARGETARCH.tar.gz
+    rm -rf go$GOLANG_VERSION.linux-$TARGETARCH.tar.gz
 EOT
 
 RUN <<EOT
@@ -53,7 +57,6 @@ RUN <<EOT
     git clone https://github.com/vozlt/nginx-module-vts.git /usr/src/nginx-module-vts
     git clone https://github.com/vozlt/nginx-module-stream-sts.git /usr/src/nginx-module-stream-sts
     git clone https://github.com/vozlt/nginx-module-sts.git /usr/src/nginx-module-sts
-    git clone https://github.com/kaltura/nginx-vod-module.git /usr/src/nginx-vod-module
     git clone https://github.com/arut/nginx-rtmp-module.git /usr/src/nginx-rtmp-module
     git clone https://github.com/arut/nginx-ts-module.git /usr/src/nginx-ts-module
     git clone https://github.com/yaoweibin/nginx_upstream_check_module /usr/src/nginx_upstream_check_module
@@ -117,18 +120,21 @@ RUN <<EOT
 EOT
 
 RUN <<EOT
-    curl -s -o /usr/src/nginx/nginx-1.29.4-resolver_conf_parsing.patch https://raw.githubusercontent.com/openresty/openresty/refs/heads/master/patches/nginx/1.29.4/nginx-1.29.4-resolver_conf_parsing.patch
-    curl -s -o /usr/src/nginx/nginx-1.29.4-reuseport_close_unused_fds.patch https://raw.githubusercontent.com/openresty/openresty/refs/heads/master/patches/nginx/1.29.4/nginx-1.29.4-reuseport_close_unused_fds.patch
-    curl -s -o /usr/src/nginx/nginx-1.29.4-log_escape_non_ascii.patch https://raw.githubusercontent.com/openresty/openresty/refs/heads/master/patches/nginx/1.29.4/nginx-1.29.4-log_escape_non_ascii.patch
+    curl -s -o /usr/src/nginx/nginx-1.31.4-resolver_conf_parsing.patch https://raw.githubusercontent.com/openresty/openresty/refs/heads/master/patches/nginx/1.31.4/nginx-1.31.4-resolver_conf_parsing.patch
+    curl -s -o /usr/src/nginx/nginx-1.31.4-reuseport_close_unused_fds.patch https://raw.githubusercontent.com/openresty/openresty/refs/heads/master/patches/nginx/1.31.4/nginx-1.31.4-reuseport_close_unused_fds.patch
+    curl -s -o /usr/src/nginx/nginx-1.31.4-log_escape_non_ascii.patch https://raw.githubusercontent.com/openresty/openresty/refs/heads/master/patches/nginx/1.31.4/nginx-1.31.4-log_escape_non_ascii.patch
 EOT
 
 RUN <<EOT
     cd /usr/src/nginx
-    patch -p1 < /usr/src/nginx_upstream_check_module/check_1.20.1+.patch
-    patch -p1 < /usr/src/ngx_http_proxy_connect_module/patch/proxy_connect_rewrite_102101.patch
-    patch -p1 < /usr/src/nginx/nginx-1.29.4-resolver_conf_parsing.patch
-    patch -p1 < /usr/src/nginx/nginx-1.29.4-reuseport_close_unused_fds.patch
-    patch -p1 < /usr/src/nginx/nginx-1.29.4-log_escape_non_ascii.patch
+    echo "Applying patches check_1.30.4+.patch"
+    patch -p1 < /usr/src/nginx_upstream_check_module/check_1.30.4+.patch
+    echo "Applying patches nginx-1.31.4-resolver_conf_parsing.patch"
+    patch -p1 < /usr/src/nginx/nginx-1.31.4-resolver_conf_parsing.patch
+    echo "Applying patches nginx-1.31.4-reuseport_close_unused_fds.patch"
+    patch -p1 < /usr/src/nginx/nginx-1.31.4-reuseport_close_unused_fds.patch
+    echo "Applying patches nginx-1.31.4-log_escape_non_ascii.patch"
+    patch -p1 < /usr/src/nginx/nginx-1.31.4-log_escape_non_ascii.patch
 EOT
 
 RUN <<EOT
@@ -199,7 +205,6 @@ RUN <<EOT
         --add-module=/usr/src/nginx-module-vts \
         --add-module=/usr/src/nginx-module-stream-sts \
         --add-module=/usr/src/nginx-module-sts \
-        --add-module=/usr/src/nginx-vod-module \
         --add-module=/usr/src/njs/nginx \
         --add-module=/usr/src/ModSecurity-nginx \
         --add-module=/usr/src/headers-more-nginx-module \
